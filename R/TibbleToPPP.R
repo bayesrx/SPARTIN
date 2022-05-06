@@ -1,14 +1,12 @@
 #' Converts a tibble with columns CentroidX, CentroidY,
-#' and PredictedClass into a point process (ppp) object
+#' and Mark into a point process (ppp) object
 #' with a square window determined by the data.
-#' Points with Class = 1 are tumor cells, points with
-#' Class = 2 are immune cells.
 #'
-#' @param t A tibble with columns CentroidX, CentroidY, and PredictedClass
-#'
+#' @param t A tibble with columns CentroidX, CentroidY, and Mark
 #' @return an object of class "ppp"
+#' @noRd
 TibbleToPPP = function(t){
-  square_ppp = ppp(x = t$CentroidX, y = t$CentroidY, marks = t$PredictedClass,
+  square_ppp = ppp(x = t$CentroidX, y = t$CentroidY, marks = t$Mark,
                    window = owin(c(min(t$CentroidX), max(t$CentroidX)),
                                  c(min(t$CentroidY), max(t$CentroidY))))
 

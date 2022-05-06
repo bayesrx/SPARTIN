@@ -1,7 +1,7 @@
-#' Tessellates a biopsy into sub-windows that the models are ultimately fit on.
+#' Tessellates a window into sub-windows that the models are ultimately fit on.
 #'
 #' @param full.tib Full tibble representing all cells in the biopsy to be
-#' tessellated. Should have three columns: CentroidX, CentroidY, and PredictedClass
+#' tessellated. Should have three columns: CentroidX, CentroidY, and Mark.
 #' @param sigma Radius of kernel smoothing used in intensity thresholding. Larger
 #' radius means less white space.
 #' @param eps Size of "pixel" that window is divided into for intensity
@@ -79,11 +79,11 @@ TesselateBiopsy = function(full.tib, sigma, eps,
   final.win = do.call(union.owin, final.win.list)
 
   final.pp = ppp(full.tib$CentroidX, full.tib$CentroidY,
-                 marks = factor(full.tib$PredictedClass),
+                 marks = factor(full.tib$Mark),
                  window = final.win)
 
   tum.set = full.tib %>%
-    filter(PredictedClass == 1)
+    filter(Mark == 1)
 
   tums.pp = ppp(tum.set$CentroidX, tum.set$CentroidY,
                 window = final.win)

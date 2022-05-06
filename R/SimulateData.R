@@ -1,3 +1,14 @@
+#' A basic function for simulating data
+#'
+#' @param n1 Number of points of type 1 to be generated.
+#' @param n2 Number of points of type 2 to be generated.
+#' @param phi Interaction parameter, a real number in [-1, 1]. -1 indicates most
+#' negative Interaction; 1 indicates most positive interaction.
+#' @param winX Horizontal width of the simulation window.
+#' @param winY Vertical height of the simulation window.
+#' @param r Radius of interaction; only necessary for phi > 0, i.e. positive
+#' interaction between points.
+
 SimulateData = function(n1, n2, phi, winX, winY, r = NULL){
   if(phi < -1 || phi > 1)
     stop("phi must be in [-1, 1]")
