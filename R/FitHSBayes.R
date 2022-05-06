@@ -2,8 +2,12 @@
 #' with gamma_{11} = gamma_{22} = 1, i.e. assuming no
 #' interaction between points of the same type.
 #'
-#' @param glmdata data frame from spatstat fitting, i.e. model$internal$glmdata.
+#' @param p spatstat ppp object with two qualitative mark levels, 1 and 2.
 #' Note that model must have been fit using Berman-Turner Device for this to work.
+#' @param r radius of interaction for model fitting.
+#' @param quad.spacing space between points in quadrature used in estimation.
+#' @param correction correction used in fitting; see spatstat documentation of
+#' "ppm.ppp" for more details.
 #' @param n.chains Number of chains to run
 #' @param n.sample Total number of posterior samples
 #' @param n.burn Number of burn-in samples
@@ -24,13 +28,18 @@
 #' log-interaction parameter between tumor cells and lymphocytes. Note that
 #' smaller values indicate a less informative prior.
 #' @return R2jags object
-FitHSBayes = function(glmdata, n.chains = 1,
+FitHSBayes = function(p, r, quad.spacing, correction = "Ripley",
+                    n.chains = 1,
                     n.sample = 11000, n.burn = 1000,
                     n.thin = 5,
                     log.beta.1.mean = 0, log.beta.1.prec = 0.0000001,
                     log.beta.2.mean = 0,  log.beta.2.prec = 0.0000001,
                     log.gamma.mean = 0, log.gamma.prec = 0.0000001){
 
+  freq_mod = FitHSFreq(p, r = r, quad.spacing = quad.spacing,
+                       correction = correction)
+
+  glmdata = freq_mod$internal$glmdata
 
   bayesian.hierstrauss = function(){
     for(i in 1:N){
@@ -57,7 +66,7 @@ FitHSBayes = function(glmdata, n.chains = 1,
   w = glmdata$.mpl.W
   nn = glmdata$markX1xX2
   N = nrow(glmdata)
-  n = max(which(glmdata$.mpl.Y != 0)) # nrow(glmdata)
+  n = max(which(glmdata$.mpl.Y != 0))
   zeros = rep(0, n)
 
   inits.JAGS = vector('list', n.chains)

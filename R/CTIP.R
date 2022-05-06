@@ -1,5 +1,9 @@
 #' Computes CTIP for a given tile
 #' @param tile ppp object with two qualitative marks
+#' @param r radius of interaction for model fitting.
+#' @param quad.spacing space between points in quadrature used in estimation.
+#' @param correction correction used in fitting; see spatstat documentation of
+#' "ppm.ppp" for more details.
 #' @param n.null number of null simulations; larger numbers of null simulations
 #' improve precision, but are computationally more demanding
 #' @param n.burn number of burn-in samples for MCMC model fitting for actual
@@ -22,7 +26,9 @@
 #' to the actual fitted model, and "null.samples" gives samples from simulated
 #' null distribution
 
-CTIP = function(tile, n.null = 5,
+CTIP = function(tile, r, quad.spacing,
+                correction = "Ripley",
+                n.null = 5,
                 n.burn = 1000, n.sample = 11000,
                 null.n.burn = 1000, null.n.sample = 11000,
                 n.thin = 5,
@@ -31,6 +37,8 @@ CTIP = function(tile, n.null = 5,
                 log.gamma.mean = 0, log.gamma.prec = 0.0000001){
 
   ff = FullFit(tile,
+               r = r, quad.spacing = quad.spacing,
+               correction = correction,
                n.null = n.null,
                n.burn = n.burn, n.sample = n.sample,
                null.n.burn = null.n.burn, null.n.sample = null.n.sample,
