@@ -9,7 +9,7 @@
 #' "ppm.ppp" for more details
 #' @return ppm object
 
-FitHSPPPFull = function(p, r = 30, quad.spacing = 30, correction = "Ripley"){
+FitHSFreq = function(p, r = 30, quad.spacing = 30, correction = "Ripley"){
   mat = matrix(c(NA, r, r, NA), nrow = 2)
   mod = ppm(p ~ marks,
             HierStrauss(radii=mat, archy = c(1,2)),
