@@ -24,7 +24,7 @@
 #' log-interaction parameter between tumor cells and lymphocytes. Note that
 #' smaller values indicate a less informative prior.
 #' @return R2jags object
-PBHSFast = function(glmdata, n.chains = 1,
+FitHSBayes = function(glmdata, n.chains = 1,
                     n.sample = 11000, n.burn = 1000,
                     n.thin = 5,
                     log.beta.1.mean = 0, log.beta.1.prec = 0.0000001,
