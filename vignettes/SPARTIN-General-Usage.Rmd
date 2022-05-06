@@ -1,0 +1,214 @@
+---
+title: "SPARTIN-General-Usage"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SPARTIN-General-Usage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Introduction
+
+This vignette will explain how to use the most important parts of the SPARTIN pipeline. We begin by loading the package, and setting a seed for reproducibility:
+
+```{r setup}
+library(SPARTIN)
+set.seed(10000)
+```
+
+The following two functions are purely for visualization. They aren't technically part of the package (yet), but you may find them useful if you decide to use this package. Regardless, we'll be using them for this vignette.
+
+```{r}
+CustomHeatmap = CH = function(m, t="", min.v = NA, max.v = NA){
+  plot.tib = tibble(r = numeric(0), c = numeric(0), val = numeric(0))
+  for(i in 1:nrow(m)){
+    plot.tib = bind_rows(plot.tib, tibble(
+      r = rep(i, ncol(m)),
+      c = 1:ncol(m),
+      val = as.numeric(m[i,])))
+  }
+  
+  plot.tib$c = as.factor(plot.tib$c)
+
+  if(is.na(min.v) || is.na(max.v)){
+    min.v = min(plot.tib$val, na.rm = T)
+    max.v = max(plot.tib$val, na.rm = T)
+  }
+  cols = colorRampPalette(c("#0a0722", "#3d0965", "#721a6e", "#a52c60", "#d44842",
+                            "#f37819", "#fcb216"))(7) #, "#f1f179"))(8)
+
+  ggplot(plot.tib) +
+    geom_tile(mapping = aes(x = c, y = reorder(r, -r), fill = val)) +
+    labs(fill = "") +
+    ggtitle(t) +
+    scale_fill_gradientn(colors = cols,
+                         limits = c(min.v, max.v),
+                         # breaks = seq(min.v, max.v, 2),
+                         na.value = 'white') +
+    theme(axis.title.y=element_blank(),
+          axis.text.y=element_blank(),
+          axis.ticks.y=element_blank(),
+          axis.title.x=element_blank(),
+          axis.text.x=element_blank(),
+          axis.ticks.x=element_blank(),
+          panel.background = element_rect(fill = "white",
+                                          colour = "black"),
+          panel.border = element_rect(linetype = "solid", fill = NA))
+}
+
+# Visualize PPP
+vis = function(p, t="", suppWarn = F){
+  if(suppWarn){
+    suppressWarnings(
+      plot(p, cols = c("black", "red"),
+           shape = c("circles", "circles"),
+           size = 6,
+           main = t)
+    )
+  }else{
+    plot(p, cols = c("black", "red"),
+         shape = c("circles", "circles"),
+         size = 6,
+         main = t)
+  }
+}
+```
+
+# Simulation and Model Fitting
+
+First, we'll simulate some data. 
+
+```{r}
+ex_ppp = SimulateData(n1 = 100, n2 = 40, phi = 0.3,
+                      winX = 300, winY = 300, r = 30)
+```
+
+Breaking down this function call:
+
+-   `n1` specifies the number of points of type 1
+-   `n2` specifies the number of points of type 2
+-   `phi` specifies the interaction between the points, -1 being the most negative (points of different types tend to "avoid" each other) and 1 being the most positive (points of different types tend to be close together)
+-   `winX` specifies the horizontal width of the window of simulation
+-   `winY` specifies the vertical height of the window of simulation
+-   `r` specifies the radius of interaction
+
+Next, we'll fit a Frequentist version of the model using the `FitHSFreq` function. The "HS" stands for "Hierarchical Strauss," the variant of the model that we'll be using. This is essentially a wrapper around the `spatstat` function `ppm` with certain parameters, since the SPARTIN pipeline uses a special case of the Hierarchical Strauss model. Below, I pass the point process we simulated, and specify that the radius of interaction is 30 units, and that the quadrature used in the fitting should have 3 units of space between each point. As always, there is a tradeoff here: the larger the quadrature (and thus the smaller that `quad.spacing` parameter), the more accurate the fitting will be. However, it will also be more computationally expensive. On the other hand, a small quadrature may lead to quicker fittings, but may also be less accurate. Unfortunately, there isn't a one size fits all solution to this across all use cases. Some situations call for larger quadratures and more precise estimation, while for others a rough approximation will probably be fine.
+
+```{r}
+ex_freq = FitHSFreq(ex_ppp, r = 30, quad.spacing = 3)
+coef(summary(ex_freq))
+```
+
+As expected, the interaction parameter (`markX1xX2`) is fairly close to zero, which makes sense given that we simulated weakly positive interaction.
+
+We can also fit the same model using Bayesian methods. Here's how we would fit a Bayesian version of the same model given above:
+
+```{r}
+ex_bayes = FitHSBayes(ex_ppp, r = 30, quad.spacing = 3)
+ex_bayes
+```
+
+There are a couple of important things to note. Firstly, you might notice that the object returned by the Frequentist fitting function is *very* different from the object returned by the Bayesian fitting function. That's because the Frequentist version returns a `ppm` object defined in the `spatstat` package, whereas the Bayesian version returns an `rjags` object as defined by the `R2jags` package. 
+
+Secondly, you might notice that while two of the parameter estimates (`log.gamma`/`markX1xX2` and `log.beta.1`/`(Intercept)`) are virtually identical, the estimate for `marks2` is extremely different from `log.beta.2`. This is because `marks2` is actually the *difference* between the log first order intensity of points of type 1 ($\log(\beta_1)$) and the log first order intensity of points of type 2 ($\log(\beta_2)$), whereas `log.beta.2` is just the value of $\log(\beta_2)$. Sure enough, if you add the estimate of `(Intercept)` to the estimate of `marks2`, you should get something virtually identical to the estimate of `log.beta.2`. 
+
+# Estimating CTIP
+
+In the paper associated with this package, we define CTIP. For a rigorous definition, I recommend checking the paper. For now, here is how you can use this package to calculate CTIP for a given point process realization:
+
+```{r}
+ex_CTIP = CTIP(ex_ppp, r = 30, quad.spacing = 3, 
+               n.null = 5, n.burn = 1000,
+               n.sample = 11000, null.n.burn = 1000, null.n.sample = 11000,
+               n.thin = 5)
+ex_CTIP
+```
+
+Again, it's worth breaking down this function call. I won't go into too much detail here, but for more information on how CTIP is actually computed, see the SPARTIN paper.
+
+* `ex_ppp` - This is the point process realization we want to estimate CTIP for.
+* `n.null` - In order to compute CTIP, null simulations are performed; this parameter specifies how many should be performed. More simulations yield a more stable and accurate estimate, but naturally take longer.
+* `n.burn` - Number of burn-in samples for the model fitting on the true data. 
+* `n.sample` - Total number of samples to draw when fitting the model on the true data.
+* `null.n.burn` - Number of burn-in samples for the model fitting on the simulated data.
+* `null.n.sample` - Total number of samples to draw for each null simulation in model fitting.
+* `n.thin` - How much to "thin" each of the chains, both in the actual model fitting and the null model fitting
+
+The total number of samples drawn on the true data is given by $\frac{n.sample - n.burn}{n.thin}$, while for the null simulations it's $n.null \cdot \frac{null.n.sample - null.n.burn}{n.thin}$.
+
+
+# Tesselation and Intensity Thresholding
+
+Another important part of the SPARTIN pipeline is the intensity thresholding to remove excess whitespace. First, I'll create a biopsy with a large amount of excess space.
+
+```{r warning=FALSE}
+# Simulate a biopsy
+ex_biopsy_part_1 = SimulateData(n1 = 5000, n2 = 1000, phi = 0.4,
+                         winX = 1000, winY = 1000, r = 30)
+
+ex_biopsy_part_2 = SimulateData(n1 = 5000, n2 = 1000, phi = 0.4,
+                         winX = 1000, winY = 1000, r = 30)
+
+# Place in a large window to demonstrate intensity thresholding in action
+ex_biopsy_excess = ppp(x = c(ex_biopsy_part_1$x, ex_biopsy_part_2$x - 1000),
+                       y = c(ex_biopsy_part_1$y, ex_biopsy_part_2$y - 1000),
+                       marks = c(ex_biopsy_part_1$marks,
+                                 ex_biopsy_part_2$marks),
+                       window = owin(xrange = c(-1000, 1000),
+                                     yrange = c(-1000, 1000)))
+
+vis(ex_biopsy_excess)
+```
+
+To see what each of the parameters do for this function, it's probably best to directly read the documentation. Here, I'll offer some advice on how to achieve a good tessellation/partition of the subspace. First, I'll start with a bad example: sigma (the bandwidth) is too small and the threshold is too high. Thus, the resulting intensity thresholded window has too much unnecessary white space, and the resulting windows are too"choppy." It also takes longer, and can lead to errors.
+
+```{r warning=FALSE}
+bad_tessellation_1 = TesselateBiopsy(PPPToTibble(ex_biopsy_excess),
+                                  sigma = 1, eps = 15,
+                                  threshold = (ex_biopsy_excess$n)/
+                                    area.owin(ex_biopsy_excess$window),
+                                  clust.size = 75,
+                                  min.clust.size = 50,
+                                  max.clust.size = 100)
+```
+
+Notice the "checkerboard" pattern of the tessellations:
+
+```{r}
+vis(bad_tessellation_1$window)
+```
+
+
+This leads to poorly shaped tiles:
+
+```{r}
+vis(bad_tessellation_1$tiles[[30]])
+```
+
+Let's try increasing the value of sigma. Note that all other parameters remain the same.
+
+```{r warning=FALSE}
+good_tessellation = TesselateBiopsy(PPPToTibble(ex_biopsy_excess),
+                                 sigma = 30, eps = 15,
+                                 threshold = (ex_biopsy_excess$n)/
+                                   area.owin(ex_biopsy_excess$window),
+                                 clust.size = 75,
+                                 min.clust.size = 50,
+                                 max.clust.size = 100)
+```
+
+This looks much better:
+
+```{r}
+vis(good_tessellation$window)
+```
+
+
+Ultimately, these are tuning parameters, and to find good values you may have to experiment a bit. The best advice I can offer is: start with a relatively large value of `sigma` (at least as large as `eps`), a relatively large value of `eps`, and a small `threshold`. Starting with a moderate `eps` is particularly important- if it's too small, the tessellation will not be computationally tractable. Once you have a working tessellation, reduce the values of sigma and eps as necessary, and increase the threshold as necessary. In my experience, the settings that work for one data set of a certain type will work for others; you should only need to go through this process once.
