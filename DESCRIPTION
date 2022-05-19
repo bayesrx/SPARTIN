@@ -2,11 +2,11 @@ Package: SPARTIN
 Title: An implementation of the SPARTIN pipelin in R
 Version: 0.0.0.9000
 Authors@R: 
-    given = "Nathaniel",
+    person(given = "Nathaniel",
            family = "Osher",
-           role = c("aut"),
+           role = c("aut", "cre"),
            email = "oshern@umich.edu",
-           comment = c(ORCID = "0000-0002-8565-5289")
+           comment = c(ORCID = "0000-0002-8565-5289"))
 Description: This is an implementation of the SPARTIN pipeline in R. 
 License: use_mit_license()
 Encoding: UTF-8
@@ -19,8 +19,9 @@ Imports:
   R2jags,
   spatstat,
   purrr,
-  ggplot2,
   magrittr,
   dplyr,
-  tibble
+  tibble,
+  ggplot2,
+  jsonlite
 VignetteBuilder: knitr
