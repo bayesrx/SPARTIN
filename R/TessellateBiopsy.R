@@ -9,9 +9,9 @@
 #' best to start larger, and see how small a value is necessary and/or
 #' computationally feasible.
 #' @param threshold Minimum value of pixels to keep in intensity threshold. Too
-#' large of a value will result in the tesselation being "choppy," i.e. too
+#' large of a value will result in the tessellation being "choppy," i.e. too
 #' much of the space will be thresholded out, and too small of a value
-#' will result in a tesselation with too much white space.
+#' will result in a tessellation with too much white space.
 #' @param clust.size Target number of type 1 points in each cluster. In all
 #' likelihood this won't be exactly satisfied.
 #' @param max.clust.size Maximum number of type 1 points allowed in a cluster.
@@ -23,7 +23,7 @@
 #' @param enforce.contiguity Determines whether each resulting tile should be
 #' contiguous. If true, keeps largest contiguous portion of each tile,
 #' provided it has enough points to meet the threshold.
-#' @param clust.method Determines how dirichlet tesselation
+#' @param clust.method Determines how dirichlet tessellation
 #' tiles are grouped into larger tiles. Must be either "greedy" or "kmeans."
 #' While both work, "kmeans" is strongly recommended at the moment.
 #' @param progress Boolean; if "TRUE," prints updates to the console.
@@ -33,10 +33,14 @@
 #' intensity thresholded space and points. "pixels" is a matrix of the "pixels"
 #' that the window is divided into for intensity thresholding, as well as the
 #' values assigned to each pixel by the kernel smoothing. "window" is the
-#' overall window that results from the tesselation; this is equivalent to
+#' overall window that results from the tessellation; this is equivalent to
 #' $pp$window.
-
-TesselateBiopsy = function(full.tib, sigma, eps,
+#' @import spatstat
+#' @import magrittr
+#' @import tibble
+#' @import dplyr
+#' @export
+TessellateBiopsy = function(full.tib, sigma, eps,
                            threshold, clust.size,
                            max.clust.size = NULL, min.clust.size = NULL,
                            enforce.contiguity = TRUE,
@@ -88,8 +92,8 @@ TesselateBiopsy = function(full.tib, sigma, eps,
   tums.pp = ppp(tum.set$CentroidX, tum.set$CentroidY,
                 window = final.win)
 
-  # Applying dirichlet tesselation
-  if(progress) print("Applying dirichlet tesselation...")
+  # Applying dirichlet tessellation
+  if(progress) print("Applying dirichlet tessellation...")
   dirch.tess = dirichlet(tums.pp)
 
   # Seeing if sorting is necessary
@@ -105,7 +109,10 @@ TesselateBiopsy = function(full.tib, sigma, eps,
   safety = 1
   max.iter = 10000
   # TODO: edge case where number of tumor cells is divisible by cluster size
-  full.window = owin(c(0, 100000), c(0, 100000))
+  full.window = owin(c(min(full.tib$CentroidX) * 10,
+                       max(full.tib$CentroidX) * 10),
+                     c(min(full.tib$CentroidY) * 10,
+                       max(full.tib$CentroidY) * 10))
   if(clust.method %in% c("greedy", "Greedy")){
     pointset.list = vector('list', length = ceiling(tums.pp$n/clust.size))
     while(!finished && safety < max.iter){
@@ -224,9 +231,9 @@ TesselateBiopsy = function(full.tib, sigma, eps,
 
 
     # SHOULD BE xy.km, not points.km$cluster- FIX
-    pointset.list = vector('list', length = max(points.km$cluster))
+    pointset.list = vector('list', length = max(xy.km[,3]))
     for(i in 1:max(as.numeric(xy.km[,3]))){
-      subgroup.indices = which(points.km$cluster == i)
+      subgroup.indices = which(xy.km[,3] == i)
       # TODO: Use to throw out small tiles?
       if(length(subgroup.indices) < min.clust.size) next
       cur.xranges = unlist(map(dirch.points[subgroup.indices], ~{.x$xrange}))
