@@ -4,6 +4,7 @@
 #'
 #' @param t A tibble with columns CentroidX, CentroidY, and Mark
 #' @return an object of class "ppp"
+#' @import spatstat
 #' @noRd
 TibbleToPPP = function(t){
   square_ppp = ppp(x = t$CentroidX, y = t$CentroidY, marks = t$Mark,

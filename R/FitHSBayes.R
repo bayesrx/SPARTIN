@@ -28,6 +28,8 @@
 #' log-interaction parameter between tumor cells and lymphocytes. Note that
 #' smaller values indicate a less informative prior.
 #' @return R2jags object
+#' @import R2jags
+#' @export
 FitHSBayes = function(p, r, quad.spacing, correction = "Ripley",
                     n.chains = 1,
                     n.sample = 11000, n.burn = 1000,

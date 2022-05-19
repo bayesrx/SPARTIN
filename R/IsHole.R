@@ -2,6 +2,7 @@
 #' @param x vector of x-coordinates of points
 #' @param y vector of y-coordinates of points
 #' @return boolean
+#' @import spatstat
 #' @noRd
 IsHole = function(x, y){
   testwindow = try(owin(poly = list(x = x, y = y)),

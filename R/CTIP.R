@@ -25,7 +25,7 @@
 #' fitting (for diagnostics), "model" gives the R2Jags object corresponding
 #' to the actual fitted model, and "null.samples" gives samples from simulated
 #' null distribution
-
+#' @export
 CTIP = function(tile, r, quad.spacing,
                 correction = "Ripley",
                 n.null = 5,

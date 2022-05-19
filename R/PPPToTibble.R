@@ -3,7 +3,8 @@
 #'
 #' @param p marked point process
 #' @return tibble with columns "CentroidX", "CentroidY", and "Mark"
-#' @noRd
+#' @import tibble
+#' @export
 PPPToTibble = function(p){
   tib = tibble(CentroidX = p$x, CentroidY = p$y, Mark = p$marks)
   return(tib)

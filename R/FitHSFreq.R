@@ -8,7 +8,8 @@
 #' @param correction correction used in fitting; see spatstat documentation of
 #' "ppm.ppp" for more details.
 #' @return ppm object.
-
+#' @import spatstat
+#' @export
 FitHSFreq = function(p, r, quad.spacing, correction = "Ripley"){
   mat = matrix(c(NA, r, r, NA), nrow = 2)
   mod = ppm(p ~ marks,

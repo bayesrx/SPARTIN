@@ -8,7 +8,9 @@
 #' @param winY Vertical height of the simulation window.
 #' @param r Radius of interaction; only necessary for phi > 0, i.e. positive
 #' interaction between points.
-
+#' @import purrr
+#' @import spatstat
+#' @export
 SimulateData = function(n1, n2, phi, winX, winY, r = NULL){
   if(phi < -1 || phi > 1)
     stop("phi must be in [-1, 1]")
