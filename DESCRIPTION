@@ -14,7 +14,8 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat (>= 3.0.0)
 Imports: 
   R2jags,
   spatstat,
@@ -25,3 +26,4 @@ Imports:
   ggplot2,
   jsonlite
 VignetteBuilder: knitr
+Config/testthat/edition: 3

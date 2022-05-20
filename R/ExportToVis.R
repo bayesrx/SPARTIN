@@ -14,7 +14,10 @@
 #' @import jsonlite
 #' @import purrr
 #' @export
-ExportToVis = function(tes, val_list, path){
+ExportToVis = function(tes, val_list, path, write=TRUE){
+  if(length(tes$tiles != length))
+    stop("value list should be same length as tile list")
+
   final_list = vector('list', length(tes$tiles))
   for(i in 1:length(tes$tiles)){
     final_list[[i]]$polygons = map(tes$tiles[[i]]$window$bdry, function(b){
@@ -31,7 +34,8 @@ ExportToVis = function(tes, val_list, path){
   }
 
   output = toJSON(final_list, auto_unbox = TRUE)
-  # browser()
+
+
   sink(path)
   cat(output)
   sink()
