@@ -37,34 +37,41 @@ CTIP(
 improve precision, but are computationally more demanding}
 
 \item{n.burn}{number of burn-in samples for MCMC model fitting for actual
-tile as well as null tiles}
+data.}
 
-\item{n.sample}{total number of samples drawn for each simulation. The total
+\item{n.sample}{total number of samples drawn for the actual data. The total
 number of samples for the actual tile will be (n.sample - n.burn)/n.thin.
 This also determines how many samples will be used to perform stochastic
-integration used to estimate CTIP}
+integration used to estimate CTIP.}
 
-\item{n.thin}{thinning for MCMC fitting}
+\item{null.n.burn}{number of burn-in samples to be drawn for each model
+fit on simulated data.}
+
+\item{null.n.sample}{total number of samples drawn for models fit on
+each simulation. The total
+number of samples for each simulation will be (null.n.sample - null.n.burn)/n.thin.}
+
+\item{n.thin}{thinning for MCMC fitting.}
 
 \item{log.beta.1.mean}{prior mean for log(beta_1), i.e. log first order
-intensity of type 1 points}
+intensity of type 1 points.}
 
-\item{log.beta.1.prec}{prior precision for log(beta_1)}
+\item{log.beta.1.prec}{prior precision for log(beta_1).}
 
 \item{log.beta.2.mean}{prior mean for log(beta_2), i.e. log first order
-intensity of type 2 points}
+intensity of type 2 points.}
 
-\item{log.beta.2.prec}{prior precision for log(beta_2)}
+\item{log.beta.2.prec}{prior precision for log(beta_2).}
 
-\item{log.gamma.mean}{prior mean for log(gamma), i.e. interaction parameter}
+\item{log.gamma.mean}{prior mean for log(gamma), i.e. interaction parameter.}
 
-\item{log.gamma.prec}{prior precision for log(gamma)}
+\item{log.gamma.prec}{prior precision for log(gamma).}
 }
 \value{
 list with three attributes: "freq" gives a summary of the frequentist
 fitting (for diagnostics), "model" gives the R2Jags object corresponding
 to the actual fitted model, and "null.samples" gives samples from simulated
-null distribution
+null distribution.
 }
 \description{
 Computes CTIP for a given tile

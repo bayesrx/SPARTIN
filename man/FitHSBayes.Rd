@@ -40,6 +40,9 @@ Note that model must have been fit using Berman-Turner Device for this to work.}
 
 \item{n.burn}{Number of burn-in samples}
 
+\item{n.thin}{Thinning for chains, i.e. chains will keep sample every n.thin-th
+sample from each model fitting.}
+
 \item{log.beta.1.mean}{Mean of normal prior on log(beta_1), first order
 intensity of tumor cells}
 

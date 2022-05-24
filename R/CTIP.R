@@ -7,24 +7,29 @@
 #' @param n.null number of null simulations; larger numbers of null simulations
 #' improve precision, but are computationally more demanding
 #' @param n.burn number of burn-in samples for MCMC model fitting for actual
-#' tile as well as null tiles
-#' @param n.sample total number of samples drawn for each simulation. The total
+#' data.
+#' @param n.sample total number of samples drawn for the actual data. The total
 #' number of samples for the actual tile will be (n.sample - n.burn)/n.thin.
 #' This also determines how many samples will be used to perform stochastic
-#' integration used to estimate CTIP
-#' @param n.thin thinning for MCMC fitting
+#' integration used to estimate CTIP.
+#' @param null.n.burn number of burn-in samples to be drawn for each model
+#' fit on simulated data.
+#' @param null.n.sample total number of samples drawn for models fit on
+#' each simulation. The total
+#' number of samples for each simulation will be (null.n.sample - null.n.burn)/n.thin.
+#' @param n.thin thinning for MCMC fitting.
 #' @param log.beta.1.mean prior mean for log(beta_1), i.e. log first order
-#' intensity of type 1 points
-#' @param log.beta.1.prec prior precision for log(beta_1)
+#' intensity of type 1 points.
+#' @param log.beta.1.prec prior precision for log(beta_1).
 #' @param log.beta.2.mean prior mean for log(beta_2), i.e. log first order
-#' intensity of type 2 points
-#' @param log.beta.2.prec prior precision for log(beta_2)
-#' @param log.gamma.mean prior mean for log(gamma), i.e. interaction parameter
-#' @param log.gamma.prec prior precision for log(gamma)
+#' intensity of type 2 points.
+#' @param log.beta.2.prec prior precision for log(beta_2).
+#' @param log.gamma.mean prior mean for log(gamma), i.e. interaction parameter.
+#' @param log.gamma.prec prior precision for log(gamma).
 #' @return list with three attributes: "freq" gives a summary of the frequentist
 #' fitting (for diagnostics), "model" gives the R2Jags object corresponding
 #' to the actual fitted model, and "null.samples" gives samples from simulated
-#' null distribution
+#' null distribution.
 #' @export
 CTIP = function(tile, r, quad.spacing,
                 correction = "Ripley",

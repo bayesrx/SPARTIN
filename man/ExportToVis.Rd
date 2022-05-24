@@ -6,7 +6,7 @@
 outputs it into a \code{.json} file that can be visualized using the companion
 web application:}
 \usage{
-ExportToVis(tes, val_list, path)
+ExportToVis(tes, val_list, path, write = TRUE)
 }
 \arguments{
 \item{tes}{Output from the TessellateBiopsy function- the data you want to

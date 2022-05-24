@@ -11,6 +11,8 @@
 #' @param n.chains Number of chains to run
 #' @param n.sample Total number of posterior samples
 #' @param n.burn Number of burn-in samples
+#' @param n.thin Thinning for chains, i.e. chains will keep sample every n.thin-th
+#' sample from each model fitting.
 #' @param log.beta.1.mean Mean of normal prior on log(beta_1), first order
 #' intensity of tumor cells
 #' @param log.beta.1.prec *Precision* of normal prior on log(beta_1), the
