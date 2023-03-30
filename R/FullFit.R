@@ -24,6 +24,7 @@
 #' fitting (for diagnostics), "model" gives the R2Jags object corresponding
 #' to the actual fitted model, and "null.samples" gives samples from simulated
 #' null distribution
+#' @import spatstat.core
 #' @noRd
 FullFit = function(tile, r, quad.spacing,
                    n.null = 5,

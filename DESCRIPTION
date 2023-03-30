@@ -24,6 +24,9 @@ Imports:
   dplyr,
   tibble,
   ggplot2,
-  jsonlite
+  jsonlite,
+  spatstat.core,
+  spatstat.random,
+  spatstat.utils
 VignetteBuilder: knitr
 Config/testthat/edition: 3
