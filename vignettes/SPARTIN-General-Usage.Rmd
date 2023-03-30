@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 
 This vignette will explain how to use the most important parts of the SPARTIN pipeline. We begin by loading the package, and setting a seed for reproducibility:
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 library(spatstat)
 library(SPARTIN)
 library(purrr)
