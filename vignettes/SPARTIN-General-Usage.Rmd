@@ -242,6 +242,24 @@ vis(good_tessellation$window)
 
 Ultimately, these are tuning parameters, and to find good values you may have to experiment a bit. The best advice I can offer is: start with a relatively large value of `sigma` (at least as large as `eps`), a relatively large value of `eps`, and a small `threshold`. Starting with a moderate `eps` is particularly important- if it's too small, the tessellation will not be computationally tractable. Once you have a working tessellation, reduce the values of sigma and eps as necessary, and increase the threshold as necessary. In my experience, the settings that work for one data set of a certain type will work for others; you should only need to go through this process once.
 
+# Working with tessellations
+
+Suppose we wanted to take the good tessellation and compute CTIP for each of the resulting tiles. This is quite trivial; each object returned from the `TessellateBiopsy` function stores the resulting tiles as a list that allows for easy vectorization of whatever metric you'd like to compute on each tile. Each entry of this list is a `ppp` object, so it's very easy to apply existing methods from `spatstat`. But for now, I'll stick to demonstrating what it would look like if we wanted to compute CTIP for the entire set of tiles.
+
+```{r eval=FALSE}
+good_tessellation_CTIP = map_dbl(good_tessellation$tiles, \(tile){
+  CTIP(tile, 
+       r = 30, 
+       quad.spacing = 3, 
+       n.null = 5, 
+       n.burn = 1000, n.sample = 11000, 
+       null.n.burn = 1000, null.n.sample = 11000,
+       n.thin = 5)
+})
+```
+
+Note that this code isn't executed, since computing CTIP is quite computationally intensive. However, this is exactly how one would analyze an actual whole slide imaging data set in practice: tessellate the biopsy, compute a measure of interaction (or whatever you're interested in) on each of the tiles, and do with the results what you see fit. Finally, if your machine supports the standard parallelization packages for R, note that `map_dbl` can easily be replaced with `lapply` or `mclapply` as one chooses. 
+
 # Interactive Visualization
 
 Suppose you want to visualize all of the tiles all together, and a value associated with each tile. To do this, you can simply use the `PlotTessellation` function. First, we need a value to plot for each tile. In this case, I'll use the number of simulated tumor cells:
