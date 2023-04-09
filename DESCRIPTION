@@ -11,22 +11,22 @@ Description: This is an implementation of the SPARTIN pipeline in R.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 Suggests: 
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
 Imports: 
   R2jags,
-  spatstat,
   purrr,
   magrittr,
   dplyr,
   tibble,
   ggplot2,
   jsonlite,
-  spatstat.core,
-  spatstat.random,
-  spatstat.utils
+  spatstat
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Depends: 
+    R (>= 2.10)
+LazyData: true

@@ -35,7 +35,6 @@
 #' values assigned to each pixel by the kernel smoothing. "window" is the
 #' overall window that results from the tessellation; this is equivalent to
 #' $pp$window.
-#' @import spatstat
 #' @import magrittr
 #' @import tibble
 #' @import dplyr
@@ -68,33 +67,37 @@ TessellateBiopsy = function(full.tib, sigma, eps,
   pos.r = round(pos.int[,1])
   pos.c = round(pos.int[,2])
 
-  final.win = owin(xrange = c(x.min + (pos.c[1] - 1)*x.step, x.min + pos.c[1]*x.step),
-                   yrange = c(y.min + (pos.r[1] - 1)*y.step, y.min + pos.r[1]*y.step))
+  final.win = spatstat.geom::owin(xrange = c(x.min + (pos.c[1] - 1)*x.step,
+                                             x.min + pos.c[1]*x.step),
+                   yrange = c(y.min + (pos.r[1] - 1)*y.step,
+                              y.min + pos.r[1]*y.step))
 
   final.win.list = vector('list', length(pos.r) + 1)
   for(i in 1:length(pos.r)){
-    cur.win = owin(xrange = c(x.min + (pos.c[i] - 1)*x.step, x.min + pos.c[i]*x.step),
-                   yrange = c(y.min + (pos.r[i] - 1)*y.step, y.min + pos.r[i]*y.step))
+    cur.win = spatstat.geom::owin(xrange = c(x.min + (pos.c[i] - 1)*x.step,
+                                             x.min + pos.c[i]*x.step),
+                   yrange = c(y.min + (pos.r[i] - 1)*y.step,
+                              y.min + pos.r[i]*y.step))
     # final.win = union.owin(final.win, cur.win)
     final.win.list[[i + 1]] = cur.win
   }
 
   if(progress) print("Constructing window...")
-  final.win = do.call(union.owin, final.win.list)
+  final.win = do.call(spatstat.geom::union.owin, final.win.list)
 
-  final.pp = ppp(full.tib$CentroidX, full.tib$CentroidY,
+  final.pp = spatstat.geom::ppp(full.tib$CentroidX, full.tib$CentroidY,
                  marks = factor(full.tib$Mark),
                  window = final.win)
 
   tum.set = full.tib %>%
     filter(Mark == 1)
 
-  tums.pp = ppp(tum.set$CentroidX, tum.set$CentroidY,
+  tums.pp = spatstat.geom::ppp(tum.set$CentroidX, tum.set$CentroidY,
                 window = final.win)
 
   # Applying dirichlet tessellation
   if(progress) print("Applying dirichlet tessellation...")
-  dirch.tess = dirichlet(tums.pp)
+  dirch.tess = spatstat.geom::dirichlet(tums.pp)
 
   # Seeing if sorting is necessary
   xy.mat = matrix(c(tums.pp$x, tums.pp$y), ncol = 2)
@@ -109,10 +112,22 @@ TessellateBiopsy = function(full.tib, sigma, eps,
   safety = 1
   max.iter = 10000
   # TODO: edge case where number of tumor cells is divisible by cluster size
-  full.window = owin(c(min(full.tib$CentroidX) * 10,
-                       max(full.tib$CentroidX) * 10),
-                     c(min(full.tib$CentroidY) * 10,
-                       max(full.tib$CentroidY) * 10))
+  if(min(full.tib$CentroidY) < 0){
+    min_y = min(full.tib$CentroidY)
+  }else{
+    min_y = 0
+  }
+
+  if(min(full.tib$CentroidX) < 0){
+    min_x = min(full.tib$CentroidX)
+  }else{
+    min_x = 0
+  }
+  full.window = spatstat.geom::owin(c(min_x * 10,
+                                      max(full.tib$CentroidX) * 10),
+                                    c(min_y * 10,
+                                      max(full.tib$CentroidY) * 10))
+
   if(clust.method %in% c("greedy", "Greedy")){
     pointset.list = vector('list', length = ceiling(tums.pp$n/clust.size))
     while(!finished && safety < max.iter){
@@ -152,7 +167,7 @@ TessellateBiopsy = function(full.tib, sigma, eps,
 
 
       tile.subset = dirch.points[subgroup.indices]
-      cur.win = do.call(union.owin, tile.subset)
+      cur.win = do.call(spatstat.geom::union.owin, tile.subset)
       # cur.win = intersect.owin(cur.win, full.window)
 
       # tile.subset = map(tile.subset, ~{.x$bdry})
@@ -167,12 +182,15 @@ TessellateBiopsy = function(full.tib, sigma, eps,
       #                yrange = c(miny, maxy),
       #                poly = tile.subset)
 
+      actual_w <- getOption("warn")
 
-      cur.pointset = ppp(x = pp$x, y = pp$y,
+      options(warn = -1)
+      cur.pointset = spatstat.geom::ppp(x = pp$x, y = pp$y,
                          marks = pp$marks,
                          window = cur.win)
+      options(warn = actual_w)
 
-      cur.pointset = as.ppp(cur.pointset)
+      cur.pointset = spatstat.geom::as.ppp(cur.pointset)
 
       pointset.list[[safety]] = cur.pointset
 
@@ -246,10 +264,10 @@ TessellateBiopsy = function(full.tib, sigma, eps,
 
 
       tile.subset = dirch.points[subgroup.indices]
-      cur.win = do.call(union.owin, tile.subset)
+      cur.win = do.call(spatstat.geom::union.owin, tile.subset)
 
       # To get rid of extraneous borders
-      cur.win = intersect.owin(cur.win, full.window)
+      cur.win = spatstat.geom::intersect.owin(cur.win, full.window)
 
       # If windows should be contiguous, keep sub-tile with the most points
       if(enforce.contiguity && length(cur.win$bdry) > 1){
@@ -260,8 +278,10 @@ TessellateBiopsy = function(full.tib, sigma, eps,
             sub.tile.point.counts[ec] = -1
             next
           }
-          cur.sub.tile.window = owin(poly = list(x = cur.win$bdry[[ec]]$x,
-                                                 y = cur.win$bdry[[ec]]$y))
+          cur.sub.tile.window = spatstat.geom::owin(poly = list(
+                                                 x = cur.win$bdry[[ec]]$x,
+                                                 y = cur.win$bdry[[ec]]$y)
+                                                 )
 
           cur.sub.tile = ppp(x = pp$x, y = pp$y,
                              marks = pp$marks,
@@ -274,7 +294,7 @@ TessellateBiopsy = function(full.tib, sigma, eps,
 
         max.sub.tile = which.max(sub.tile.point.counts)
 
-        cur.sub.tile.window = owin(poly = list(x = cur.win$bdry[[max.sub.tile]]$x,
+        cur.sub.tile.window = spatstat.geom::owin(poly = list(x = cur.win$bdry[[max.sub.tile]]$x,
                                                y = cur.win$bdry[[max.sub.tile]]$y))
 
         final.poly.list = list(list(x = cur.win$bdry[[max.sub.tile]]$x,
@@ -285,7 +305,7 @@ TessellateBiopsy = function(full.tib, sigma, eps,
         hole.indices = which(sub.tile.point.counts == -1)
 
         for(hi in hole.indices){
-          if(sum(!inside.owin(w = cur.sub.tile.window,
+          if(sum(!spatstat.geom::inside.owin(w = cur.sub.tile.window,
                               x = cur.win$bdry[[ec]]$x,
                               y = cur.win$bdry[[ec]]$y)) == 0){
             final.poly.list[[length(final.poly.list) + 1]] = list(
@@ -295,15 +315,16 @@ TessellateBiopsy = function(full.tib, sigma, eps,
           }
         }
 
-        cur.win = owin(poly = final.poly.list)
+        cur.win = spatstat.geom::owin(poly = final.poly.list)
       }
 
+      w = suppressWarnings({
+        cur.pointset = spatstat.geom::ppp(x = pp$x, y = pp$y,
+                                          marks = pp$marks,
+                                          window = cur.win)
 
-      cur.pointset = ppp(x = pp$x, y = pp$y,
-                         marks = pp$marks,
-                         window = cur.win)
-
-      cur.pointset = as.ppp(cur.pointset)
+        cur.pointset = spatstat.geom::as.ppp(cur.pointset)
+      })
 
       pointset.list[[i]] = cur.pointset
     }

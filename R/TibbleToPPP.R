@@ -4,11 +4,11 @@
 #'
 #' @param t A tibble with columns CentroidX, CentroidY, and Mark
 #' @return an object of class "ppp"
-#' @import spatstat
+#' @import spatstat.geom
 #' @noRd
 TibbleToPPP = function(t){
-  square_ppp = ppp(x = t$CentroidX, y = t$CentroidY, marks = t$Mark,
-                   window = owin(c(min(t$CentroidX), max(t$CentroidX)),
+  square_ppp = spatstat.geom::ppp(x = t$CentroidX, y = t$CentroidY, marks = t$Mark,
+                   window = spatstat.geom::owin(c(min(t$CentroidX), max(t$CentroidX)),
                                  c(min(t$CentroidY), max(t$CentroidY))))
 
   return(square_ppp)

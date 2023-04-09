@@ -21,7 +21,7 @@ This vignette will explain how to use the most important parts of the SPARTIN pi
 ```{r warning=FALSE, message=FALSE}
 library(spatstat)
 library(SPARTIN)
-library(purrr)
+library(tidyverse)
 set.seed(10000)
 ```
 
@@ -198,7 +198,7 @@ ex_biopsy_excess = ppp(x = c(ex_biopsy_part_1$x, ex_biopsy_part_2$x - 1000),
 vis(ex_biopsy_excess)
 ```
 
-To see what each of the parameters do for this function, it's probably best to directly read the documentation. Here, I'll offer some advice on how to achieve a good tessellation/partition of the subspace. First, I'll start with a bad example: sigma (the bandwidth) is too small and the threshold is too high. Thus, the resulting intensity thresholded window has too much unnecessary white space, and the resulting windows are too"choppy." It also takes longer, and can lead to errors.
+To see what each of the parameters do for this function, it's probably best to directly read the documentation. Here, I'll offer some advice on how to achieve a good tessellation/partition of the subspace. First, I'll start with a bad example: sigma (the bandwidth) is too small and the threshold is too high. Thus, the resulting intensity thresholded window has too much unnecessary white space, and the resulting windows are too "choppy." It also takes longer, and can lead to errors.
 
 ```{r warning=FALSE}
 bad_tessellation_1 = TessellateBiopsy(PPPToTibble(ex_biopsy_excess),
@@ -299,6 +299,92 @@ ExportToVis(good_tessellation, val_list, "path/where/you/want/output")
 ```
 
 If you upload the resulting `.json` file to the visualization application, it will let you more easily examine multiple measures on the same biopsy, and zoom in on specific tiles to see the configuration of points.
+
+# Example WSI Image
+
+The `SPARTIN` package actually includes an example whole slide image biopsy data; this is the biopsy used in the supplementary materials. The data is automatically loaded with `SPARTIN`, and can be accessed through the variable `example_WSI` Here is what it looks like:
+
+```{r}
+data("example_WSI")
+glimpse(example_WSI)
+```
+
+The data structure is fairly self explanatory: `CentroidX` is the x-coordinate, `CentroidY` is the `y` coordinate, and `Mark` is whether the cell is tumor or immune (1 indicates tumor, 2 indicates immune). Here's what this biopsy looks like:
+
+```{r}
+ggplot(example_WSI %>% filter(Mark == 1)) + 
+  geom_point(aes(x = CentroidX, y = CentroidY), size = 0.1, color = "black") + 
+  ggtitle("Tumor cell locations") + 
+  theme_bw()
+
+ggplot(example_WSI %>% filter(Mark == 2)) + 
+  geom_point(aes(x = CentroidX, y = CentroidY), size = 0.1, color = "red") + 
+  ggtitle("Immune cell locations") + 
+  theme_bw()
+```
+
+The biopsy consists of two non-contiguous segments. To simplify things, we'll just work with the left one by filtering out all cell locations with x-coordinate greater than 10,000:
+
+```{r}
+left_chunk = example_WSI %>% 
+  filter(CentroidX < 10000)
+
+ggplot(left_chunk %>% filter(Mark == 1)) + 
+  geom_point(aes(x = CentroidX, y = CentroidY, color = Mark), size = 0.1, color = "black") + 
+  ggtitle("Tumor cell locations") + 
+  theme_bw()
+
+ggplot(left_chunk %>% filter(Mark == 2)) + 
+  geom_point(aes(x = CentroidX, y = CentroidY, color = Mark), size = 0.1, color = "red") + 
+  ggtitle("Immune cell locations") + 
+  theme_bw()
+```
+
+We'll start by creating a tessellation, using the same settings as we used for the simulated data (though a different threshold).
+
+```{r}
+left_chunk_tessellation = TessellateBiopsy(left_chunk,
+                                 sigma = 30, eps = 15,
+                                 0.00001,
+                                 clust.size = 75,
+                                 max.clust.size = 100)
+```
+
+There was a warning, but this just means a few cells were left out of the final window. While we're not going to worry about this right now (there are 52,000 cells in this chunk alone), if you wanted to get every last cell in the final window you could lower the threshold. To examine the partition, let's plot the number of tumor cells per tile, like we did for the simulated data:
+
+```{r}
+PlotTessellation(
+  left_chunk_tessellation,
+  map_dbl(left_chunk_tessellation$tiles, ~ sum(.x$marks == 1)),
+  "# Tumor Cells"
+)
+```
+
+This looks good. If we wanted to compute CTIP, the could we would use is virtually identical to the chunk used above (once again, it has not been run for computational reasons):
+
+```{r eval=FALSE}
+wsi_CTIP = map_dbl(left_chunk_tessellation$tiles, \(tile){
+  CTIP(tile, 
+       r = 30, 
+       quad.spacing = 3, 
+       n.null = 5, 
+       n.burn = 1000, n.sample = 11000, 
+       null.n.burn = 1000, null.n.sample = 11000,
+       n.thin = 5)
+})
+```
+
+If instead one wanted to compute the G-cross function and get a list of the resulting functions, this could also be easily accomplished using the function provided in `spatstat` (note the change from `map_dbl` to `map`):
+
+```{r eval=FALSE}
+wsi_Gcross = map(left_chunk_tessellation$tiles, \(tile){
+  Gcross(tile, 1, 2)
+})
+```
+
+
+
+
 
 
 
