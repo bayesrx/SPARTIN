@@ -13,7 +13,7 @@
 FitHSFreq = function(p, r, quad.spacing, correction = "Ripley"){
   mat = matrix(c(NA, r, r, NA), nrow = 2)
   mod = spatstat.model::ppm(p ~ marks,
-            spatstat.core::HierStrauss(radii=mat, archy = c(1,2)),
+            spatstat.model::HierStrauss(radii=mat, archy = c(1,2)),
             eps = quad.spacing,
             correction = correction)
 
