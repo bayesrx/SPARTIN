@@ -8,11 +8,11 @@
 #' @param correction correction used in fitting; see spatstat documentation of
 #' "ppm.ppp" for more details.
 #' @return ppm object.
-#' @import spatstat.core
+#' @import spatstat.model
 #' @export
 FitHSFreq = function(p, r, quad.spacing, correction = "Ripley"){
   mat = matrix(c(NA, r, r, NA), nrow = 2)
-  mod = spatstat.core::ppm(p ~ marks,
+  mod = spatstat.model::ppm(p ~ marks,
             spatstat.core::HierStrauss(radii=mat, archy = c(1,2)),
             eps = quad.spacing,
             correction = correction)
